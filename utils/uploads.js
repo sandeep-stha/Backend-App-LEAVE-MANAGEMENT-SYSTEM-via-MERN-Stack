@@ -42,7 +42,7 @@ let upload = multer({
   storage: storage,
   fileFilter: imageFilter,
   limits: {
-    fileSize: 9048000, //Max File Size i.e 9MB
+    fileSize: 2048000, //Max File Size i.e 2MB
   },
 });
 

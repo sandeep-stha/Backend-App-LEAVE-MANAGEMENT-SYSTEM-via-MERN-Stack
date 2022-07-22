@@ -10,18 +10,18 @@ const leaveSchema = new mongoose.Schema(
     },
 
     //Leave Start Date
-    start_date: {
+    startDate: {
       type: Date,
       required: [true, "Select the start date of your leave"],
     },
 
     //Leave End Date
-    end_date: {
+    endDate: {
       type: Date,
     },
 
     //Type of Leave
-    leave_type: {
+    leaveType: {
       type: String,
       enum: {
         values: [
@@ -38,7 +38,7 @@ const leaveSchema = new mongoose.Schema(
     },
 
     //Leave Variation By Full or Half
-    half_full: {
+    halfFull: {
       type: String,
       enum: ["first_half", "second_half", "full"],
       required: [true, "Select desired half or full leave"],

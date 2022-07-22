@@ -5,10 +5,15 @@
 // export default model("User", userSchema);
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Schema.Types;
+//IF ABOVE LINE WAS NOT WRITTEN THEN NEED TO WRITE THE FOLLOWING IN BELOW:-
+// role_id :{
+//   type:mongoose.Schema.Types.ObjectId,
+//   ref:'Role'
+// },
 const userSchema = new mongoose.Schema(
   {
     //Full Name
-    fullname: {
+    fullName: {
       type: String,
       required: [true, "Please add a full name"],
     },

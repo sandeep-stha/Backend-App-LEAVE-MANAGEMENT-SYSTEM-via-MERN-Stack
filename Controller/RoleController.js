@@ -2,7 +2,7 @@
 const _ = require("lodash");
 
 //ROLE MODULE
-const Role = require("../Model/Roles");
+const Role = require("../model/Role");
 
 //TO GET ALL ROLES
 module.exports.getAll = async (req, res) => {
@@ -38,8 +38,8 @@ module.exports.addNew = async (req, res) => {
   });
 };
 
-//TO DELETE ROLE VIA ROLE-ID
-module.exports.updateRole = async (req, res) => {
+//TO UPDATE ROLE VIA ROLE-ID
+module.exports.updateExisting = async (req, res) => {
   const role = await Role.findByIdAndUpdate(req.params.id, req.body);
   if (!role)
     //Single Line so no need to use {}
@@ -48,7 +48,7 @@ module.exports.updateRole = async (req, res) => {
 };
 
 //TO DELETE ROLE BY ID
-module.exports.deleteRole = async (req, res) => {
+module.exports.deleteExisting = async (req, res) => {
   const role = await Role.findByIdAndUpdate(req.params.id);
   if (!role)
     return res.status(404).json({ status: false, msg: "Role not found" });
