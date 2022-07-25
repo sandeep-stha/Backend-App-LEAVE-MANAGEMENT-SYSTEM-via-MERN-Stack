@@ -10,6 +10,8 @@ const { ObjectId } = mongoose.Schema.Types;
 //   type:mongoose.Schema.Types.ObjectId,
 //   ref:'Role'
 // },
+const bcrypt = require("bcrypt");
+
 const userSchema = new mongoose.Schema(
   {
     //Full Name
@@ -35,6 +37,10 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, "Please add a valid email address"],
+      match: [
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Please enter the valid email address",
+      ],
       unique: [true, "Enter a email address that is not registered previously"],
     },
 
@@ -42,6 +48,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Enter your password"],
+      select: false, //So as to hide password fields
     },
 
     //Gender
@@ -71,5 +78,19 @@ const userSchema = new mongoose.Schema(
 
   { timestamps: true }
 );
+
+//METHODS NEEDED FOR FUNCTION
+
+//GET ACCESS TOKEN
+userSchema.methods.getAccessToken = function () {
+  return jwt.sign({ _id: this._id, role: this.role }, process.env.PRIVATE_KEY, {
+    expiresIn: process.env.TOKEN_EXPIRES,
+  });
+};
+
+//FOR VALIDATE PASSWORD
+userSchema.methods.validatePassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
 
 module.exports = mongoose.model("User", userSchema);

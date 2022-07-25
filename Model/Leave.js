@@ -38,17 +38,17 @@ const leaveSchema = new mongoose.Schema(
     },
 
     //Leave Variation By Full or Half
-    halfFull: {
+    fullHalf: {
       type: String,
-      enum: ["first_half", "second_half", "full"],
-      required: [true, "Select desired half or full leave"],
+      enum: ["full", "half"],
+      required: [true, "Select desired full or half leave"],
     },
 
-    //First half or second half
-    // fhalf_lhalf: {
-    //   type: String,
-    //   enum: ["first_half", "second_half"],
-    // },
+    // First half or second half
+    selectHalf: {
+      type: String,
+      enum: ["first", "second"],
+    },
 
     //Status of Leave Applicaion
     status: {

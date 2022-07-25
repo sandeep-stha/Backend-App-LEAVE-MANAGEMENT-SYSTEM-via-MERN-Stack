@@ -1,6 +1,7 @@
 //EXPRESS
 const router = require("express").Router();
 
+const { Router } = require("express");
 //ROUTER
 // const router = express.Router();
 
@@ -11,6 +12,7 @@ const {
   addNew,
   updateExisting,
   deleteExisting,
+  login,
 } = require("../controller/UserController");
 
 //=========================ROUTES==============================
@@ -29,5 +31,8 @@ router.put("/updateUser/:id", updateExisting);
 
 //TO DELETE A PARTICUAR USER
 router.delete("/deleteUser/:id", deleteExisting);
+
+//TO LOGIN FOR USER
+router.post("/login", login);
 
 module.exports = router;
