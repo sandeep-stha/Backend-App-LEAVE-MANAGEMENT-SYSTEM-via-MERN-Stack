@@ -28,6 +28,7 @@ module.exports.getOne = async (req, res) => {
 
 //TO ADD NEW ROLE
 module.exports.addNew = async (req, res) => {
+  const { error } = addRoleDataValidation(req.body);
   const role = await Role.create(_.pick(req.body, ["role"])); //_.pick is a function via lodash
   //_.pick mechanism?
   //Filter from req.body (Object) and returns only selected field i.e "role" as an object
@@ -49,8 +50,16 @@ module.exports.updateExisting = async (req, res) => {
 
 //TO DELETE ROLE BY ID
 module.exports.deleteExisting = async (req, res) => {
-  const role = await Role.findByIdAndUpdate(req.params.id);
+  const role = await Role.findByIdAndDelete(req.params.id);
   if (!role)
     return res.status(404).json({ status: false, msg: "Role not found" });
   return res.json({ status: true, msg: "Role Deleted Successfully", role });
+};
+
+const addRoleDataValidation = (datas) => {
+  const schema = Joi.object({
+    role: Joi.string().required(),
+  });
+
+  return schema.validate(datas);
 };

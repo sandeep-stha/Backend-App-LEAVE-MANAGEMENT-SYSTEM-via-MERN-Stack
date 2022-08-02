@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
+
+//FOR MONGO REFERENCE TO ANOTHER MODEL
 const { ObjectId } = mongoose.Schema.Types;
 
+//LEAVE SCHEMA
 const leaveSchema = new mongoose.Schema(
   {
     //Purpose of Leave

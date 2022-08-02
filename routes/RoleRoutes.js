@@ -4,7 +4,7 @@ const express = require("express");
 //ROUTER
 const router = express.Router();
 
-//USER FUNCTIONS
+//USER FUNCTIONS AND AUTH FUNCTIONS
 const {
   getAll,
   getOne,
@@ -13,21 +13,31 @@ const {
   deleteExisting,
 } = require("../controller/RoleController");
 
+const { authorization, authentication } = require("../middleware/auth");
+
 //=========================ROUTES==============================
 
-//TO ADD NEW USER
-router.post("/addrole", addNew);
+//TO ADD NEW ROLE
+router.post("/addRole", [authentication, authorization("admin")], addNew);
 
-//GET COMPLETE USERS LIST
-router.get("/allrole", getAll);
+//GET COMPLETE ROLE LIST
+router.get("/allRole", [authentication, authorization("admin", "hr")], getAll);
 
-//GET A PARTICULAR USER BY ID
-router.get("/role/:id", getOne);
+//GET A PARTICULAR ROLE BY ID
+router.get("/role/:id", [authentication], getOne);
 
-//TO UPDATE A PARTICUAR USER
-router.put("/updaterole/:id", updateExisting);
+//TO UPDATE A PARTICUAR ROLE
+router.put(
+  "/updateRole/:id",
+  [authentication, authorization("admin")],
+  updateExisting
+);
 
-//TO DELETE A PARTICUAR USER
-router.delete("/deleterole", deleteExisting);
+//TO DELETE A PARTICUAR ROLE
+router.delete(
+  "/deleteRole/:id",
+  [authentication, authorization("admin")],
+  deleteExisting
+);
 
 module.exports = router;

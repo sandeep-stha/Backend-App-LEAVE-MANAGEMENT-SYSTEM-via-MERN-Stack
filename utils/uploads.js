@@ -21,6 +21,7 @@ const storage = multer.diskStorage({
       file.originalname,
       path.extname(file.originalname)
     );
+
     //Extension
     let ext = path.extname(file.originalname);
     cb(null, filename + "_" + Date.now() + ext);

@@ -1,3 +1,4 @@
+//TO VALIDATE ASYNC-AWAIT ERRORS. WORKS ALONGSIDE EXPRESS ASYNC ERRORS PACKAGE
 module.exports = (err, req, res, next) => {
   console.log(err);
   if (err) {

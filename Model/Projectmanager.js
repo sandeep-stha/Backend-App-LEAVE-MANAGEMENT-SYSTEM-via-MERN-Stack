@@ -1,18 +1,19 @@
-//THe first letter of the model should be capital. Hence Projectmanager.js and not projectmanager.js
-// const { Schema } = require("mongoose");
 const mongoose = require("mongoose");
+
+//FOR MONGO REFERENCE TO ANOTHER MODEL
 const { ObjectId } = mongoose.Schema.Types;
 
+//PROJECT MANAGER SCHEMA
 const pmSchema = new mongoose.Schema(
   {
-    //Referencing Own ID From Users Table
+    //REFERENCE USER ID FROM USER MODEL FOR PMID
     pmId: {
       type: ObjectId,
       ref: "User",
       required: true,
     },
 
-    //Referencing the employee id from Users Table
+    //REFERENCE USER ID FROM USER MODEL FOR PMID
     employeeId: {
       type: ObjectId,
       ref: "User",

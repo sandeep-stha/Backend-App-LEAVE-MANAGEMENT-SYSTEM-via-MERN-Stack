@@ -10,6 +10,7 @@ require("dotenv").config();
 //===================EXPRESS=======================
 const express = require("express");
 const app = express();
+const cors = require("cors");
 
 //===================DATABASE========================
 require("./Database/connection");
@@ -17,26 +18,33 @@ require("./Database/connection");
 //====================DEFAULT EXPRESS MIDDLEWARE==============
 app.use(express.json()); //For JSON DATA
 app.use(express.urlencoded({ extended: true })); //FOR URL ENCODED DATA
+app.use(cors()); //FOR CONNECTIONG TO FRONT END I.E REACT
 
 //================CUSTOM MIDDLEWARES======================
 //USER
 const userRoutes = require("./routes/UserRoutes");
 
 //ROLE
-const roleRoute = require("./routes/RoleRoutes");
+const roleRoutes = require("./routes/RoleRoutes");
 
 //PROJECT MANAGER
-const projectManager = require("./routes/ProjectmanagerRoutes");
+const projectManagerRoutes = require("./routes/ProjectmanagerRoutes");
+
+//LEAVE
+const leaveRoutes = require("./routes/LeaveRoutes");
 
 //++++++++++++++++++++MIDDLEWARES SETUP+++++++++++++++++++++++++
-//USER
+//HOME ROUTES FOR USER
 app.use("/users", userRoutes);
 
-//ROLE
-app.use("/roles", roleRoute);
+//HOME ROUTES FOR ROLES
+app.use("/roles", roleRoutes);
 
-//PROJECT MANAGER
-app.use("/pms", projectManager);
+//HOME ROUTES FOR ROLES
+app.use("/pms", projectManagerRoutes);
+
+//HOME ROUTES FOR ROLES
+app.use("/leaves", leaveRoutes);
 
 //HANDLING ERRORS BY USING ERROR MIDDLEWARE
 app.use(require("./middleware/error"));

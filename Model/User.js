@@ -1,23 +1,29 @@
-//New Method
-// import { Schema, model } from "mongoose";
-// const userSchema = new Schema(
-//At The End
-// export default model("User", userSchema);
 const mongoose = require("mongoose");
-const { ObjectId } = mongoose.Schema.Types;
-//IF ABOVE LINE WAS NOT WRITTEN THEN NEED TO WRITE THE FOLLOWING IN BELOW:-
-// role_id :{
-//   type:mongoose.Schema.Types.ObjectId,
-//   ref:'Role'
-// },
-const bcrypt = require("bcrypt");
 
+//FOR MONGO REFERENCE TO ANOTHER MODEL
+const { ObjectId } = mongoose.Schema.Types;
+
+//THIRD PARTY
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const Role = require("./Role");
+
+//USER SCHEMA
 const userSchema = new mongoose.Schema(
   {
     //Full Name
-    fullName: {
+    firstName: {
       type: String,
-      required: [true, "Please add a full name"],
+      required: [true, "Please add a your first name"],
+    },
+
+    middleName: {
+      type: String,
+    },
+
+    lastName: {
+      type: String,
+      required: [true, "Please add your last name"],
     },
 
     //Address
@@ -54,6 +60,7 @@ const userSchema = new mongoose.Schema(
     //Gender
     gender: {
       type: String,
+      //SET ENUM VALUES FOR SELECT OPTIONS
       enum: {
         values: ["male", "female", "other"],
         message: "Select your gender",
@@ -74,16 +81,32 @@ const userSchema = new mongoose.Schema(
       //This above reference means take reference from the role_id of Role.js Model
       //Thus create RoleController.js before Creating UserController.js
     },
+
+    //Company ID number
+    companyId: {
+      type: String,
+      required: [true, "Enter the Company ID"],
+      unique: [true, "CompanyId must be unique"],
+    },
+
+    designation: {
+      type: String,
+      //UNIQUE SO AS SAME DESIGNATION SHOULD NOT BE REPEATED
+      required: [true, "Please Set A Designation"],
+      unique: [true, "Designation must be unique"],
+    },
   },
 
   { timestamps: true }
 );
 
-//METHODS NEEDED FOR FUNCTION
+//METHODS FOR USER CONTROLLER FUNCTIONS
 
 //GET ACCESS TOKEN
-userSchema.methods.getAccessToken = function () {
-  return jwt.sign({ _id: this._id, role: this.role }, process.env.PRIVATE_KEY, {
+userSchema.methods.getAccessToken = async function () {
+  const role = await Role.findById(this.role); //This points to current object i.e ROLE
+  return jwt.sign({ _id: this._id, role: role.role }, process.env.PRIVATE_KEY, {
+    //AFTER TOKEN IS CREATED, WE CAN ACCESS THESE DATA FROM TOKEN I.E ID AND ROLE
     expiresIn: process.env.TOKEN_EXPIRES,
   });
 };
@@ -94,3 +117,18 @@ userSchema.methods.validatePassword = async function (password) {
 };
 
 module.exports = mongoose.model("User", userSchema);
+
+//FOR GETTING PASSWORD RESET TOKEN
+userSchema.methods.getPasswordResetToken = async function () {
+  const resetToken = await crypto.randomBytes(20).toString("hex"); //i.e Limit bytes upto 20 digits long and convert it to hex
+
+  //NOW TO HASH THE RESETTOKEN AND SET TO resetPasswordToken field
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex"); //createHash = to use algorithm i.e sha256, digest('hex') to make it into hexadecimal
+
+  //NOW TO SET THE EXPIRY FOR TOKEN
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+  return resetToken;
+};

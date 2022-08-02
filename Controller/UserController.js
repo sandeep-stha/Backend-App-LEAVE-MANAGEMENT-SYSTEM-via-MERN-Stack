@@ -1,127 +1,113 @@
-//NOTE:-
-
 //THIRD  PARTY
 const Joi = require("joi");
 const _ = require("lodash");
 require("express-async-errors");
-// require("dotenv").config();
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
 //USER MODULE
 const User = require("../model/User");
 
-//To Import
+//UTILS
+const sendMail = require("../utils/sendMail");
 
 //TO GET ALL USERS
 module.exports.getAll = async (req, res) => {
-  // console.log("user");
-  const users = await User.find();
+  const users = await User.find().populate("role");
   if (users.length > 0) return res.json({ status: true, users });
   return res.status(404).json({ status: false, msg: "No Users found" });
 };
 
 //TO GET USER BY USER ID
 module.exports.getOne = async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const user = await User.findById(req.params.id).populate("role");
   if (user) return res.json({ status: true, user });
   return res.status(404).json({ status: false, msg: "No such User found" });
 };
 
 //TO ADD NEW USER
+//AS EXPRESS ASYNC ERROR PACKAGE IS USED AND WE HAVE VALIDATED USING JOI, NO NEED TO USE TRY{} CATCH{}
 module.exports.addNew = async (req, res) => {
-  // try{
   const { error } = addUserDataValidation(req.body);
-  //JOI VALIDATES ONE AT A TIME
-  //HENCE, IF WE DO:
-  // return res.status(400).json({ status: false , msg: error.message }); -> ONE ERROR at a time
-
   if (error) {
-    // return res.status(400).json({ status: false , msg: error.message });
-    return res.status(400).json({ status: false, msg: error });
+    return res.status(400).json({ status: false, msg: error.message });
   } else {
     //FOR HASHING PASSWORD
-    // const SALT_ROUND = process.env.SALT_ROUND;
     const salt = await bcrypt.genSalt(Number(process.env.SALT) || 10); //Number as env took salt as string
     req.body.password = await bcrypt.hash(req.body.password, salt);
 
     const user = await User.create(
       _.pick(req.body, [
-        "fullName",
+        "firstName",
+        "middleName",
+        "lastName",
         "address",
         "phone",
         "email",
         "password",
         "gender",
         "dob",
+        "role",
+        "companyId",
+        "designation",
       ])
     );
 
-    // req.body.password = password;
-    //Success Message
+    //getAccessToken FROM methods in User Model
+    const token = await user.getAccessToken();
+
+    //SUCCESS
     return res.json({
       status: true,
       msg: "New user created successfully",
       user,
+      token,
     });
-    // }
-    // catch(error){
-    // res.status(400).json({ status: false, msg: error });
-    // }
   }
 };
 
-//TO UPDATE USER BY USER_ID
+//TO UPDATE USER BY USER ID
 module.exports.updateExisting = async (req, res) => {
-  //NOTE, FOR ERROR MESSAGE HANDLING, MUST HAVE TRY CATCH OR CAN USE A PACKAGE CALLED EXPRESS-ASYNC-ERRORS
-  //THE FOLLOWING IS WITHOUT USING THE PACKAGE SO WE MUST USE TRY-CATCH
+  //THE FOLLOWING IS WITHOUT USING THE EXPRESS ASYNC ERROR PACKAGE SO WE MUST USE TRY-CATCH
   try {
-    //PREVIOUS CODE
-    // const user = await User.findById(req.params.id);
-    // if (!user)
-    //   return res.status(404).json({ status: false, msg: "No such User found" });
-    //Now To SAVE USER DATA
-    // user.set(req.body);
-    //INSTEAD, WE DO findByIDAndUpdate
-
-    // const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-    // new: true,
-    // }); // new: true shows updated data
-
-    //TO CHECK IF USER EXISTS OR NOT
     const user = await User.findById(req.params.id);
     if (!user)
       return res.status(404).json({ status: false, msg: "No such User found" });
 
-    //NOW INITIALLY, CHECK IF EMAIL IS ALREADY IN USE
-    if (req.body.email) {
-      const checkEmail = await User.findOne({ email: req.body.email });
-      if (checkEmail && checkEmail.id != user.id)
-        //i.e If user has input email (that is now in checkEmail) and the id linked to that email (CheckEmail.id) does not match id linked to user i.e User ID
-        return res
-          .status(400)
-          .json({ status: false, msg: "Email not available" });
-    }
-    //NOW FINALLY SAVE USER DATA
-    // await user.save(); //Note, this is old method, now instead, do the following:-
+    if (
+      req.user.role == "admin" ||
+      req.user.role == "hr" ||
+      user._id == req.user._id
+    ) {
+      //NOW INITIALLY, CHECK IF EMAIL IS ALREADY IN USE
+      if (req.body.email) {
+        const checkEmail = await User.findOne({ email: req.body.email });
+        //If checkEmail has data or not and If user has input email (that is now in checkEmail) and the id linked to that email (CheckEmail.id) does not match id linked to user i.e User ID
+        if (checkEmail && checkEmail.id != user.id)
+          return res
+            .status(400)
+            .json({ status: false, msg: "Email not available" }); //Show this If checkEmail does not have any data and/or the id does not match
+      }
+      //NOW FINALLY SAVE USER DATA
+      // await user.save(); //Note, this is old method, now instead, do the following:-
 
-    //FIRST HASHING PASSWORD AS IN MODEL WE HAVE SET HASHED PASSWORD
-    const salt = await bcrypt.genSalt(Number(process.env.SALT) || 10); //Number as env took salt as string
-    req.body.password = await bcrypt.hash(req.body.password, salt);
-    const userData = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    return res.json({
-      status: true,
-      msg: "User updated successfully",
-      userData,
-    });
+      //FIRST HASHING PASSWORD AS IN MODEL WE HAVE SET HASHED PASSWORD
+      const salt = await bcrypt.genSalt(Number(process.env.SALT) || 10); //Number as env took salt as string
+      req.body.password = await bcrypt.hash(req.body.password, salt);
+      const userData = await User.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+      });
+      return res.json({
+        status: true,
+        msg: "User updated successfully",
+        userData,
+      });
+    } else res.status(401).json({ status: false, msg: "Not Authorized" });
   } catch (error) {
     res.status(400).json({ status: false, msg: error });
   }
 };
 
-//TO DELETE USER BY USER_ID
+//TO DELETE USER BY USER ID
 module.exports.deleteExisting = async (req, res) => {
   const user = await User.findByIdAndRemove(req.params.id);
   if (!user)
@@ -129,74 +115,142 @@ module.exports.deleteExisting = async (req, res) => {
   return res.json({ status: true, msg: "User deleted successfully" });
 };
 
-//TO LOGIN FOR USER
+//WE WILL NOT DEFINE LOGOUT FUNCTION
+//IF WE SAVE TOKEN IN A MODEL, WE NEED TO CLEAR TOKEN FROM IT ASWELL BUT AN EASIER METHOD IS AS FOLLOWS:
+// THE EASIER METHOD IS THAT WE DON'T SAVE THE TOKEN IN A MODEL, HENCE NO NEED TO CLEAR TOKEN, ALSO,
+//AS WE ARE NOT STORING ANY TOKENS IN BACKEND, NO NEED TO DEFINE ANY LOGOUT FUNTION HERE BUT IN FRONT END, WE WILL GET THAT TOKEN, SAVE IT IN SESSION AND THEN CLEAR IT WHEN LOGGED OUT
+
+//FOR USER LOGIN
 module.exports.login = async (req, res) => {
   const { error } = validateLoginData(req.body);
   if (error)
+    //Single statement so no curly braces
     return res
       .status(400)
       .json({ status: false, msg: error.details[0].message });
-  //To Show entire error, do
-  // return res.status(400).json({status:false, msg:error.details[0].message})
+  //as return already states not compulsory to write else
 
-  //ELSE
-  const { email, password } = req.body; //DE-Structuring
-  //INITIALLY CHECKING IF NO USER EXISTS OR NOT
-  const user = await User.findOne({ email }).select("+password"); //As we have set password select as false, it will be hidden, hence we need to use select('+password') to use that field
-  //AS WE HAVE DE-STRUCTURED, NO NEED TO WRITE email:req.body.email. Also, as email: email. we can directly write email
-  if (!user)
-    return res.status(400).json({ status: false, msg: "No Such User Found" });
-
-  //If User FOUND
-  //As password is hashed, we need to validate it so as it matches, hence
-  const valid = await user.validatePassword(password); //Here, validatePassword is custom Method defined below USER MODEL
+  //DE_STRUCTURING EMAIL AND PASSWORD
+  const { email, password } = req.body;
+  const user = await User.findOne({ email }).select("+password"); //No need to set email:email as both are spelled same. ALSO, select('+password)as we hence set password as hidden by default
+  if (!user) {
+    return res.status(400).json({ status: false, msg: "User not found" });
+  }
+  //IF USER EXISTS, VALIDATE FIRST
+  const valid = await user.validatePassword(password); //validatePassword is our METHOD from USER MODEL
   if (!valid)
     return res.status(400).json({ status: false, msg: "Invalid Credentials" });
 
-  //IF VALID
-  //WE NEED TO CREATE TOKEN FIRST
-  // const token = user.getAccessToken(); //getAccessToken is our custom method as defined in User Model
+  const token = await user.getAccessToken();
 
-  //JWT COOKIE OPTIONS
-  // const options = {
-  // expires: new Date(
-  // Date.now() + process.env.JWT_COOKIE_EXPIRE * 60 * 60 * 24 * 7
-  // ),
-  // httpOnly: true, //Only ALLOW HTTP
-  // };
+  //TOKEN EXPIRE SETUP
+  const options = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRE * 60 * 60 * 24 * 1000
+    ),
+    httpOnly: true,
+  };
 
-  //FOR PRODUCTION
-  // if (process.env.NODE_ENV === "production") options.secure = true;
-
-  // return res
-  // .cookie("token", token, options)
-  // .json({ status: true, msg: "Login Succesful", token });
-
-  //ABOVE CODES REMOVED TEMPORARILY FOR LOGIN, UNCOMMENT IT LATER AND ALSO REMOVE THE FOLLOWING
-  return res.json({ status: true, msg: "login Successful" });
+  return res
+    .cookie("token", token, options)
+    .json({ status: true, msg: "Login successful", token });
 };
 
-//FOR ADD USER VALIDATION
+//FOR SENDING FORGET PASSWORD RESET LINKS
+module.exports.forgetPassword = async (req, res) => {
+  if (req.body && req.body.email) {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user)
+      return res.status(404).json({
+        status: false,
+        msg: `The email address ${req.body.email} does not exist`,
+      });
+    //IF USER FOUND
+    //INITIALLY GENERATE PASSWORD RESET TOKEN
+    const resetToken = await user.getPasswordResetToken(); //getPasswordResetToken() METHOD from USER MODEL
+
+    //INITIALLY, SEND EMAIL WITH URLS FOR FORGET PASSWORD
+    //NO ROUTES FOR THIS
+    const resetUrl = `${req.protocol}:${req.get(
+      "host"
+    )}/users/resetpassword/${resetToken}`;
+    const message = `You are receiving this email because you or someone else has requested to reset the password.`;
+
+    try {
+      await sendMail({
+        //SendMail Called From utils
+        email: user.email,
+        subject: "Password reset token",
+        message: "Please use the following link to reset the password",
+      });
+      await user.save();
+      return res.json({ status: true, msg: "Please check your email" });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(400)
+        .json({ status: false, msg: "Email could not be sent" });
+    }
+  }
+  return res.status(400).json({ status: false, msg: "Please send your email" });
+};
+
+//TO RESET FORGOTTEN PASSWORD
+module.exports.updateForgottenPassword = async (req, res) => {
+  //INITIAL CREATE A RESET PASSWORD TOKEN USING CURRENT TOKEN
+  //HASHING TOKEN
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+  //
+  const user = await User.findOne({
+    resetPasswordToken, //CALLING METHOD DEFINED ABOVE
+    resetPasswordExpire: { $gt: Date.now() }, //CALLING METHOD FROM USER MODEL
+  });
+  //IF NO USER FOUND
+  if (!user)
+    return res.status(400).json({ status: false, msg: "Invalid Token" });
+  //ELSE IF USER EXISTS
+
+  //SET USER PASSWORD
+  user.password = req.body.password;
+
+  //ALSO, CLEAR TOKEN AND EXPIRY
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  //FINALLY SAVE
+  await user.save();
+  res.json({ status: true, msg: "Password Changed Successfully" });
+};
+
+//VALIDATION FOR ADD USER
 const addUserDataValidation = (datas) => {
   const schema = Joi.object({
-    fullName: Joi.string().required(),
+    firstName: Joi.string().required(),
+    middleName: Joi.string(),
+    lastName: Joi.string().required(),
     address: Joi.string().required(),
     phone: Joi.number().required(),
     email: Joi.string().required(),
     password: Joi.string().required(),
     gender: Joi.string().required(),
-    dob: Joi.string().required(),
+    dob: Joi.date().required(),
+    role: Joi.string(),
+    companyId: Joi.string().required(),
+    designation: Joi.string().required(),
   });
 
   return schema.validate(datas);
 };
 
 //FOR LOGIN FIELD VALIDATION
-const validateLoginData = (logindatas) => {
+const validateLoginData = (datas) => {
   const schema = Joi.object({
     email: Joi.string().email(),
     password: Joi.string(),
   });
 
-  return schema.validate(logindatas);
+  return schema.validate(datas);
 };
