@@ -6,17 +6,14 @@ require("express-async-errors");
 //USER MODULE
 const Leave = require("../model/Leave");
 
-//TO GET ALL LEAVES
+//TO GET ALL LEAVES FROM ALL USER
 module.exports.getAll = async (req, res) => {
-  if (
-    req.user.role == "admin" ||
-    req.user.role == "hr" ||
-    user._id == req.user._id
-  ) {
-    const leaves = await Leave.find().populate("user");
-    if (leaves.length > 0) return res.json({ status: true, leaves });
-    return res.status(404).json({ status: false, msg: "No leaves found" });
-  } else res.status(401).json({ status: false, msg: "You are not authorized" });
+  let condition = {};
+  if (req.user.role !== "admin" || req.user.role !== "hr")
+    condition = { user: req.user._id };
+  const leaves = await Leave.find(condition).populate("user");
+  if (leaves.length > 0) return res.json({ status: true, leaves });
+  return res.status(404).json({ status: false, msg: "No leaves found" });
 };
 
 //TO GET LEAVE BY LEAVE ID
@@ -113,7 +110,7 @@ module.exports.updateExisting = async (req, res) => {
 module.exports.deleteExisting = async (req, res) => {
   const leave = await Leave.findByIdAndRemove(req.params.id);
   if (!leave)
-    return res.status(400).json({ status: false, msg: "No such User found" });
+    return res.status(400).json({ status: false, msg: "No such Leave found" });
   return res.json({ status: true, msg: "User deleted successfully" });
 };
 
