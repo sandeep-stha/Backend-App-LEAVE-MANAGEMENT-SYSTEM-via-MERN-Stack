@@ -24,10 +24,10 @@ router.get("/leave/:id", [authentication], getOne);
 //TO ADD NEW LEAVE
 router.post("/addLeave", [authentication], addNew);
 
-//TO UPDATE A PARTICUAR LEAVE BY LEAVE ID
+//TO UPDATE A PARTICULAR LEAVE BY LEAVE ID
 router.put("/updateLeave/:id", [authentication], updateExisting);
 
-//TO DELETE A PARTICUAR LEAVE BY ID
+//TO DELETE A PARTICULAR LEAVE BY ID
 router.delete(
   "/deleteLeave/:id",
   [authentication, authorization("admin", "hr")],

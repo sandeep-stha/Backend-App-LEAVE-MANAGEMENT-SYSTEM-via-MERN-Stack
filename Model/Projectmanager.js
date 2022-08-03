@@ -13,7 +13,7 @@ const pmSchema = new mongoose.Schema(
       required: true,
     },
 
-    //REFERENCE USER ID FROM USER MODEL FOR PMID
+    //REFERENCE USER ID FROM USER MODEL FOR EMPLOYEEID TO SHOW EMPLOYEE UNDER PM
     employeeId: {
       type: ObjectId,
       ref: "User",

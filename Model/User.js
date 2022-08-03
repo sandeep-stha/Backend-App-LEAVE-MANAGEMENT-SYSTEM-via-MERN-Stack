@@ -91,9 +91,7 @@ const userSchema = new mongoose.Schema(
 
     designation: {
       type: String,
-      //UNIQUE SO AS SAME DESIGNATION SHOULD NOT BE REPEATED
       required: [true, "Please Set A Designation"],
-      unique: [true, "Designation must be unique"],
     },
   },
 
@@ -116,8 +114,6 @@ userSchema.methods.validatePassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-module.exports = mongoose.model("User", userSchema);
-
 //FOR GETTING PASSWORD RESET TOKEN
 userSchema.methods.getPasswordResetToken = async function () {
   const resetToken = await crypto.randomBytes(20).toString("hex"); //i.e Limit bytes upto 20 digits long and convert it to hex
@@ -132,3 +128,5 @@ userSchema.methods.getPasswordResetToken = async function () {
   this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
   return resetToken;
 };
+
+module.exports = mongoose.model("User", userSchema);

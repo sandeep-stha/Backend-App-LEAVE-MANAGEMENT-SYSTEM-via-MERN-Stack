@@ -1,4 +1,5 @@
 //THIRD PARTY
+const Joi = require("joi");
 const _ = require("lodash");
 
 //ROLE MODULE
@@ -56,6 +57,7 @@ module.exports.deleteExisting = async (req, res) => {
   return res.json({ status: true, msg: "Role Deleted Successfully", role });
 };
 
+//JOI VALIDATION FOR ADD NEW ROLE
 const addRoleDataValidation = (datas) => {
   const schema = Joi.object({
     role: Joi.string().required(),

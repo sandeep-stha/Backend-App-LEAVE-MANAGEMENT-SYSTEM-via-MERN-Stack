@@ -19,24 +19,24 @@ const { authentication, authorization } = require("../middleware/auth");
 //=========================ROUTES==============================
 
 //TO ADD NEW PM
-router.post("/addpm", [authentication, authorization("admin", "hr")], addNew);
+router.post("/addPm", [authentication, authorization("admin", "hr")], addNew);
 
 //GET COMPLETE PMS LIST
-router.get("/allpm", [authentication, authorization("admin", "hr")], getAll);
+router.get("/allPm", [authentication, authorization("admin", "hr")], getAll);
 
-//GET A PARTICULAR USER BY ID
+//GET A PARTICULAR PM BY ID
 router.get("/pm/:id", [authentication], getOne);
 
-//TO UPDATE A PARTICLUAR PM BY ID
+//TO UPDATE A PARTICULAR PM BY ID
 router.put(
-  "/updatepm/:id",
+  "/updatePm/:id",
   [authentication, authorization("admin", "hr")],
   updateExisting
 );
 
-//TO DELETE A PARTICUAR PM BY ID
+//TO DELETE A PARTICULAR PM BY ID
 router.delete(
-  "/deletepm",
+  "/deletePm/:id",
   [authentication, authorization("admin", "hr")],
   deleteExisting
 );

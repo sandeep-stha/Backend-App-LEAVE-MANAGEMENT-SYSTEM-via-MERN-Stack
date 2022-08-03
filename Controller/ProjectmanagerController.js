@@ -7,8 +7,9 @@ const Pm = require("../model/Projectmanager");
 //TO GET ALL PROJECT MANAGERS
 module.exports.getAll = async (req, res) => {
   const pms = await Pm.find()
-    .populate("pmID", "fullName")
-    .populate("employeeID", "fullName"); //ID GET BY DEFAULT
+    .populate("pmId", "firstName") //ID GET BY DEFAULT
+    .populate({ path: "employeeId", select: ["firstName", "lastName"] });
+  // .populate("employeeId", "lastName");
   if (pms.length > 0) {
     //If PM Exists
     return res.json({ status: true, pms }); //i.e Return the projectmanagers
@@ -53,33 +54,30 @@ module.exports.addNew = async (req, res) => {
 
 //TO UPDATE ROLE VIA ROLE-ID
 module.exports.updateExisting = async (req, res) => {
-  if (req.user.role == "admin") {
-    const pm = await Pm.findByIdAndUpdate(req.params.id, req.body);
-    if (!pm)
-      //Single Line so no need to use {}
-      return res
-        .status(404)
-        .json({ status: false, msg: "Project Manager not found" });
-    return res.json({
-      status: true,
-      msg: "Project Manager Updated Successfully",
-      role,
-    });
-  }
+  // console.log(req.user);
+  // if (req.user.role == "admin") { //COMMENTED AS REPLACED VIA MIDDLEWARE
+  const pm = await Pm.findByIdAndUpdate(req.params.id, req.body);
+  if (!pm)
+    //Single Line so no need to use {}
+    return res
+      .status(404)
+      .json({ status: false, msg: "Project Manager not found" });
+  return res.json({
+    status: true,
+    msg: "Project Manager Updated Successfully",
+  });
+  // }
 };
 
 //TO DELETE ROLE BY ID
 module.exports.deleteExisting = async (req, res) => {
-  if (req.user.role == "admin") {
-    const pm = await Pm.findByIdAndUpdate(req.params.id);
-    if (!pm)
-      return res
-        .status(404)
-        .json({ status: false, msg: "Project Manager not found" });
-    return res.json({
-      status: true,
-      msg: "Project Manager Deleted Successfully",
-      role,
-    });
-  }
+  const pm = await Pm.findByIdAndDelete(req.params.id);
+  if (!pm)
+    return res
+      .status(404)
+      .json({ status: false, msg: "Project Manager not found" });
+  return res.json({
+    status: true,
+    msg: "Project Manager Deleted Successfully",
+  });
 };

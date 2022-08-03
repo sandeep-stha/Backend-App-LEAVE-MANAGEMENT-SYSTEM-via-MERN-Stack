@@ -114,6 +114,7 @@ module.exports.deleteExisting = async (req, res) => {
   return res.json({ status: true, msg: "User deleted successfully" });
 };
 
+//VALIDATION FOR ADD LEAVE
 const addLeavesDataValidation = (datas) => {
   const schema = Joi.object({
     reason: Joi.string().required(),

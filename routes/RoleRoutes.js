@@ -26,14 +26,14 @@ router.get("/allRole", [authentication, authorization("admin", "hr")], getAll);
 //GET A PARTICULAR ROLE BY ID
 router.get("/role/:id", [authentication], getOne);
 
-//TO UPDATE A PARTICUAR ROLE
+//TO UPDATE A PARTICULAR ROLE
 router.put(
   "/updateRole/:id",
   [authentication, authorization("admin")],
   updateExisting
 );
 
-//TO DELETE A PARTICUAR ROLE
+//TO DELETE A PARTICULAR ROLE
 router.delete(
   "/deleteRole/:id",
   [authentication, authorization("admin")],
