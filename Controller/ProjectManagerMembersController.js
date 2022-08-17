@@ -2,7 +2,7 @@
 const _ = require("lodash");
 
 //PROJECT MANAGER MODULE
-const Pm = require("../model/Projectmanager");
+const Pm = require("../model/ProjectManagerMembers");
 
 //TO GET ALL PROJECT MANAGERS
 module.exports.getAll = async (req, res) => {
@@ -33,17 +33,17 @@ module.exports.getOne = async (req, res) => {
     .json({ status: false, msg: "Project Manager not found" });
 };
 
-//TO ADD NEW PROJECT MANAGER
+//TO ADD NEW PROJECT MEMBERS
 module.exports.addNew = async (req, res) => {
   // if (req.user.role === "admin") {
-  const pm = await Pm.create(
-    _.pick(req.body, ["pmId", "employeeId"]) //I.E ONLY SELECT THESE FIELDS
-  ); //_.pick is a function via lodash
+  const data = _.pick(req.body, ["employeeId"]); //I.E ONLY SELECT THESE FIELDS
+  data.pmId = req.user._id;
+  const pm = await Pm.create(data); //_.pick is a function via lodash
   //_.pick mechanism?
   //Filter from req.body (Object) and returns only selected field i.e "Project Manager" as an object
   return res.json({
     status: true,
-    msg: "New Project Manager Created Successfully",
+    msg: "New Project Member Selected Successfully",
   });
   // }
   // return res.status(401).json({

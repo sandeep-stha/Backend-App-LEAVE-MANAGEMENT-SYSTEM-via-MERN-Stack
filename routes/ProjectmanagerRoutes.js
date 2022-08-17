@@ -11,7 +11,7 @@ const {
   addNew,
   updateExisting,
   deleteExisting,
-} = require("../controller/ProjectmanagerController");
+} = require("../controller/ProjectManagerMembersController");
 
 //AUTHENTICATION AND AUTHORIZATION FUNCTIONS
 const { authentication, authorization } = require("../middleware/auth");
@@ -19,7 +19,7 @@ const { authentication, authorization } = require("../middleware/auth");
 //=========================ROUTES==============================
 
 //TO ADD NEW PM
-router.post("/addPm", [authentication, authorization("admin", "hr")], addNew);
+router.post("/addPm", [authentication, authorization("pm")], addNew);
 
 //GET COMPLETE PMS LIST
 router.get("/allPm", [authentication, authorization("admin", "hr")], getAll);
