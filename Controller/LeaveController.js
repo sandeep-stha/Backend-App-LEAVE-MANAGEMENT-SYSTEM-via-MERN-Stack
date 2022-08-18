@@ -164,7 +164,7 @@ const addLeavesDataValidation = (datas) => {
     leaveType: Joi.string().required(),
     fullHalf: Joi.string().required(),
     selectHalf: Joi.string(),
-    status: Joi.string().required(),
+    status: Joi.string(),
   });
 
   return schema.validate(datas);
