@@ -5,6 +5,8 @@ const router = require("express").Router();
 const {
   getAll,
   getOne,
+  getAbsentEmployeesForToday,
+  getFutureLeaves,
   addNew,
   updateExisting,
   deleteExisting,
@@ -17,6 +19,14 @@ const { authentication, authorization } = require("../middleware/auth");
 
 //GET COMPLETE LEAVE LIST
 router.get("/allLeave", [authentication], getAll);
+
+//GET LEAVES OF ABSENT USER TODAY
+router.get("/leave/absent", [authentication], getAbsentEmployeesForToday);
+
+//NOTE:- :ID WILL TAKE ANY VALUE SO USE BETTER NAMING SYSTEM AND TRY TO USE ID BELOW
+
+//GET FUTURE LEAVES
+router.get("/leave/coming/leaves", [authentication], getFutureLeaves);
 
 //GET A PARTICULAR LEAVE BY ID
 router.get("/leave/:id", [authentication], getOne);

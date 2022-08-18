@@ -1,16 +1,20 @@
 //THIRD  PARTY
+require("express-async-errors");
 const Joi = require("joi");
 const _ = require("lodash");
-require("express-async-errors");
+const moment = require("moment");
 
 //USER MODULE
 const Leave = require("../model/Leave");
 
 //TO GET ALL LEAVES FROM ALL USER
 module.exports.getAll = async (req, res) => {
+  // console.log(req.user)
   let condition = {};
-  if (req.user.role !== "admin" || req.user.role !== "hr")
+  if (req.user.role !== "admin" && req.user.role !== "hr")
+    //Not || as single true will set it to go below
     condition = { user: req.user._id };
+  // console.log(condition)
   const leaves = await Leave.find(condition).populate("user");
   if (leaves.length > 0) return res.json({ status: true, leaves });
   return res.status(404).json({ status: false, msg: "No leaves found" });
@@ -21,6 +25,43 @@ module.exports.getOne = async (req, res) => {
   const user = await Leave.findById(req.params.id).populate("user");
   if (user) return res.json({ status: true, user });
   return res.status(404).json({ status: false, msg: "No such User found" });
+};
+
+//SEE WHO'S ON LEAVE TODAY
+module.exports.getAbsentEmployeesForToday = async (req, res) => {
+  var today = new Date();
+  var date =
+    today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
+  const startDateToday = `${date} 00:00:00`;
+  const endDateToday = `${date} 23:59:59`;
+  console.log(startDateToday, endDateToday);
+  const leaves = await Leave.find({
+    startDate: { $lte: new Date(startDateToday) },
+    endDate: { $gte: new Date(endDateToday) },
+  });
+
+  if (leaves.length > 0) return res.json({ status: true, leaves });
+  return res
+    .status(404)
+    .json({ status: false, msg: "No Employees On Leave Today" });
+};
+
+//GET FUTURE LEAVES OF EMPLOYEES
+module.exports.getFutureLeaves = async (req, res) => {
+  // console.log(req.user)
+  let referenceDate = moment().add(1, "days").format();
+  let futureDate = referenceDate.split("T")[0];
+  let condition = {};
+  if (req.user.role == "user") {
+    //Not || as single true will set it to go below
+    condition = { user: req.user._id };
+    // console.log(condition)
+  }
+  condition.startDate = { $gt: futureDate };
+  const leaves = await Leave.find(condition).populate("user");
+  console.log(leaves);
+  if (leaves.length > 0) return res.json({ status: true, leaves });
+  return res.status(404).json({ status: false, msg: "No leaves found" });
 };
 
 //TO ADD NEW LEAVE REQUEST
@@ -122,6 +163,7 @@ const addLeavesDataValidation = (datas) => {
     endDate: Joi.date(),
     leaveType: Joi.string().required(),
     fullHalf: Joi.string().required(),
+    selectHalf: Joi.string(),
     status: Joi.string().required(),
   });
 
