@@ -82,48 +82,65 @@ module.exports.addNew = async (req, res) => {
       "remarks",
       "files",
     ]);
-    let startDate = new Date(userData.startDate);
-    let endDate = new Date(userData.endDate);
-    let condition = startDate <= endDate;
-    if (condition) {
-      if (startDate >= new Date()) {
-        //CHECK IF SAME LEAVE TYPE BY SAME USER ALREADY EXISTS
-        if (req.body.leaveType) {
-          const checkLeave = await Leave.findOne({
-            leaveType: req.body.leaveType,
-            startDate: startDate,
-            user: req.user._id,
+    let startDate;
+    let endDate;
+    if (userData.startDate) {
+      startDate = new Date(userData.startDate);
+      if (userData.endDate) {
+        endDate = new Date(userData.endDate);
+        console.log("startdate", startDate);
+        console.log("enddate", endDate);
+        console.log(startDate >= endDate);
+        if (startDate >= endDate)
+          return res.status(400).json({
+            status: false,
+            msg: "Start Date should be at least on same or prior date than end date",
           });
-          if (checkLeave)
-            return res.status(400).json({
-              status: false,
-              msg: "You have already applied for same leave on same date",
-            }); //Show this If checkEmail does not have any data and/or the id does not match
-        }
-        //NOW SETTING USER PROPERTY
-        userData.user = req.user._id; //AS user FIELD IN Leave MODEL hence userData.user and setting it as req.user._id
-
-        //CREATING NEW LEAVE REQUEST FOR USER i.e ACTUALLY SAVING
-        const leave = await Leave.create(userData);
-
-        // console.log(userData);
-        //SUCCESS
-        return res.json({
-          status: true,
-          msg: "New leave added successfully",
-          leave,
-        });
       } else {
+        if (userData.fullHalf === "full")
+          return res
+            .status(400)
+            .json({
+              status: false,
+              msg: "End date is required for full day leave",
+            });
+      }
+
+      if (startDate <= new Date())
         return res.status(400).json({
           status: false,
-          msg: "Start Date should be should be greater than todays date",
+          msg: "Start Date should be less than today's date",
         });
-      }
     } else
-      return res.status(400).json({
-        status: false,
-        msg: "Start Date should be at least on same or prior date than end date",
+      return res
+        .status(400)
+        .json({ status: false, msg: "Start date is required :(" });
+    //CHECK IF SAME LEAVE TYPE BY SAME USER ALREADY EXISTS
+    if (req.body.leaveType) {
+      const checkLeave = await Leave.findOne({
+        leaveType: req.body.leaveType,
+        startDate,
+        user: req.user._id,
       });
+      if (checkLeave)
+        return res.status(400).json({
+          status: false,
+          msg: "You have already applied for same leave on same date",
+        }); //Show this If checkEmail does not have any data and/or the id does not match
+    }
+    //NOW SETTING USER PROPERTY
+    userData.user = req.user._id; //AS user FIELD IN Leave MODEL hence userData.user and setting it as req.user._id
+
+    //CREATING NEW LEAVE REQUEST FOR USER i.e ACTUALLY SAVING
+    const leave = await Leave.create(userData);
+
+    // console.log(userData);
+    //SUCCESS
+    return res.json({
+      status: true,
+      msg: "New leave added successfully",
+      leave,
+    });
   }
 };
 
