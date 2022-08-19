@@ -84,33 +84,41 @@ module.exports.addNew = async (req, res) => {
     ]);
     let startDate = new Date(userData.startDate);
     let endDate = new Date(userData.endDate);
-    if (startDate <= endDate) {
-      //CHECK IF SAME LEAVE TYPE BY SAME USER ALREADY EXISTS
-      if (req.body.leaveType) {
-        const checkLeave = await Leave.findOne({
-          leaveType: req.body.leaveType,
-          startDate: startDate,
-          user: req.user._id,
+    let condition = startDate <= endDate;
+    if (condition) {
+      if (startDate >= new Date()) {
+        //CHECK IF SAME LEAVE TYPE BY SAME USER ALREADY EXISTS
+        if (req.body.leaveType) {
+          const checkLeave = await Leave.findOne({
+            leaveType: req.body.leaveType,
+            startDate: startDate,
+            user: req.user._id,
+          });
+          if (checkLeave)
+            return res.status(400).json({
+              status: false,
+              msg: "You have already applied for same leave on same date",
+            }); //Show this If checkEmail does not have any data and/or the id does not match
+        }
+        //NOW SETTING USER PROPERTY
+        userData.user = req.user._id; //AS user FIELD IN Leave MODEL hence userData.user and setting it as req.user._id
+
+        //CREATING NEW LEAVE REQUEST FOR USER i.e ACTUALLY SAVING
+        const leave = await Leave.create(userData);
+
+        // console.log(userData);
+        //SUCCESS
+        return res.json({
+          status: true,
+          msg: "New leave added successfully",
+          leave,
         });
-        if (checkLeave)
-          return res.status(400).json({
-            status: false,
-            msg: "You have already applied for same leave on same date",
-          }); //Show this If checkEmail does not have any data and/or the id does not match
+      } else {
+        return res.status(400).json({
+          status: false,
+          msg: "Start Date should be should be greater than todays date",
+        });
       }
-      //NOW SETTING USER PROPERTY
-      userData.user = req.user._id; //AS user FIELD IN Leave MODEL hence userData.user and setting it as req.user._id
-
-      //CREATING NEW LEAVE REQUEST FOR USER i.e ACTUALLY SAVING
-      const leave = await Leave.create(userData);
-
-      // console.log(userData);
-      //SUCCESS
-      return res.json({
-        status: true,
-        msg: "New leave added successfully",
-        leave,
-      });
     } else
       return res.status(400).json({
         status: false,
